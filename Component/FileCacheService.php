@@ -20,12 +20,13 @@ class FileCacheService
     {
         $this->ext = '.cache';
         $this->root = $kernelCacheDir.'/adadgio/cache-bundle';
-        $this->dir = null;
-        $this->env = $environment;
-        $this->filepath = null;
-        $this->expires = '';
-    }
 
+        $this->dir = null;
+        $this->filepath = null;
+        $this->env = $environment;
+        $this->expires = '60s'; // should a default really be set
+    }
+    
     /**
      * A special method to be able to use this service from annotations.
      * See KernelControllerListener::onKernelController() method for more information.
@@ -174,7 +175,7 @@ class FileCacheService
     {
         return $this->dir;
     }
-    
+
     private function createCacheDir()
     {
         if (false === is_dir($this->dir)) {
