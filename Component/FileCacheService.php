@@ -9,6 +9,7 @@ use Adadgio\CacheBundle\Annotation\FileCache;
 
 class FileCacheService
 {
+    private $root;
     private $dir;
     private $env;
     private $ext;
@@ -18,12 +19,13 @@ class FileCacheService
     public function __construct($environment, $kernelCacheDir)
     {
         $this->ext = '.cache';
-        $this->dir = $kernelCacheDir.'/adadgio/cache-bundle';
+        $this->root = $kernelCacheDir.'/adadgio/cache-bundle';
+        $this->dir = null;
         $this->env = $environment;
         $this->filepath = null;
         $this->expires = '';
     }
-    
+
     /**
      * A special method to be able to use this service from annotations.
      * See KernelControllerListener::onKernelController() method for more information.
@@ -74,15 +76,11 @@ class FileCacheService
     {
         $hash = md5($identifier);
 
-        $this->setCategory($category);
+        $this->setCategory($category); // must be called prior to file path!
         $this->filepath = $this->dir.'/'.$hash.$this->ext;
 
         return $this;
     }
-
-    /**
-     * Sets the expiration date of the cache file.
-     */
 
     /**
      * Sets an optional sub directory in which to store future cached files.
@@ -91,7 +89,7 @@ class FileCacheService
      */
     public function setCategory($category = null)
     {
-        $this->dir = (null === $category) ? $this->dir : $this->dir.'/'.trim($category, '/');
+        $this->dir = (null === $category) ? $this->root : $this->root.'/'.trim($category, '/');
 
         return $this;
     }
@@ -176,12 +174,17 @@ class FileCacheService
     {
         return $this->dir;
     }
-
+    
     private function createCacheDir()
     {
         if (false === is_dir($this->dir)) {
             $fs = (new Filesystem())->mkdir($this->dir);
         }
+    }
+
+    public function getCacheRootDir()
+    {
+        return $this->root;
     }
 
     /**
