@@ -1,0 +1,6 @@
+services:
+    adadgio_cache.file_cache:
+        class: Adadgio\CacheBundle\Component\FileCache
+        arguments:
+            - "%kernel.environment%"
+            - "%kernel.cache_dir%"
