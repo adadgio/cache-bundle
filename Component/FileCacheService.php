@@ -2,10 +2,12 @@
 
 namespace Adadgio\CacheBundle\Component;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Filesystem\Filesystem;
+use Adadgio\CacheBundle\Annotation\FileCache;
 
-class FileCache
+class FileCacheService
 {
     private $dir;
     private $env;
@@ -16,16 +18,38 @@ class FileCache
     public function __construct($environment, $kernelCacheDir)
     {
         $this->ext = '.cache';
-        $this->dir = $kernelCacheDir.'adadgio/cache';
+        $this->dir = $kernelCacheDir.'/adadgio/cache-bundle';
         $this->env = $environment;
         $this->filepath = null;
         $this->expires = '';
+    }
+    
+    /**
+     * A special method to be able to use this service from annotations.
+     * See KernelControllerListener::onKernelController() method for more information.
+     *
+     * @param \Request A Symfony request
+     * @param array Annotation
+     * @return \FileCacheService
+     */
+    public function createFromRequestAndAnnotation(Request $request, FileCache $annotation)
+    {
+        $uri = $request->getRequestUri();
+        $params = $this->getRequestParams($request);
+
+        // create a identifier from request url and get parameters
+        $identifier = $uri.implode(':', $params);
+
+        // bootstrap the hereby cache service
+        $this->identify($identifier, $annotation->getCategory())->expires($annotation->getExpires());
+
+        return $this;
     }
 
     /**
      * Writes a cache file into the current active cache dir.
      * @param  mixed Data to cache, any type (its normalized into a string)
-     * @return \FileCache
+     * @return \FileCacheService
      */
     public function put($data)
     {
@@ -44,7 +68,7 @@ class FileCache
      *
      * @param  string An clean string for the catgegory sub dir
      * @param  string Any string, its hashed anyway
-     * @return \FileCache
+     * @return \FileCacheService
      */
     public function identify($identifier, $category = null)
     {
@@ -63,7 +87,7 @@ class FileCache
     /**
      * Sets an optional sub directory in which to store future cached files.
      * @param  string Subdirectory relative path
-     * @return \FileCache
+     * @return \FileCacheService
      */
     public function setCategory($category = null)
     {
@@ -81,13 +105,13 @@ class FileCache
     {
         return is_file($this->filepath) ? unserialize(file_get_contents($this->filepath)) : null;
     }
-    
+
     /**
      * Sets the cache validity time span (expiration time). Possible
      * input values are "1s|2m|3h|4d" for seconds, minutes, hours or days
      *
      * @param string Expiration time prefixed by units (s, h, d)
-     * @return \FileCache
+     * @return \FileCacheService
      */
     public function expires($expression)
     {
@@ -126,7 +150,7 @@ class FileCache
     /**
      * Clears all cache data for the active given directory.
      *
-     * @return \FileCache
+     * @return \FileCacheService
      */
     public function clear()
     {
@@ -193,5 +217,26 @@ class FileCache
         }
 
         return (int) $seconds;
+    }
+
+    /**
+     * Retrieve request parameters, either in the JSON body or the GET parameters
+     * depending on the request method that is detected
+     *
+     * @param object \Request
+     * @return array
+     */
+    private function getRequestParams(Request $request)
+    {
+        if ($request->getMethod() === 'GET') {
+            return $request->query->all();
+
+        } else if ($request->getMethod() === 'POST') {
+            $params = json_decode($request->getContent(), true);
+            return (null === $params) ? array() : $params;
+
+        } else {
+            return array();
+        }
     }
 }

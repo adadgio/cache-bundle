@@ -1,6 +1,12 @@
 services:
     adadgio_cache.file_cache:
-        class: Adadgio\CacheBundle\Component\FileCache
+        class: Adadgio\CacheBundle\Component\FileCacheService
         arguments:
             - "%kernel.environment%"
             - "%kernel.cache_dir%"
+
+    adadgio_cache.kernel_request_listener:
+        class: Adadgio\CacheBundle\Listener\KernelControllerListener
+        tags:
+            - {name: kernel.event_listener, event: kernel.controller, method: onKernelController}
+        arguments: [ "@annotation_reader", "@adadgio_cache.file_cache" ]
