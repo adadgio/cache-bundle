@@ -163,7 +163,6 @@ class FileCacheService
 
     /**
      * Clears all cache data for the active given directory.
-     *
      * @return \FileCacheService
      */
     public function clear()
@@ -184,6 +183,15 @@ class FileCacheService
         }
 
         return $this;
+    }
+
+    /**
+     * Clears all cache data for the active given directory.
+     * @return \FileCacheService
+     */
+    public function flush($category = null)
+    {
+
     }
 
     public function getCacheDir()
