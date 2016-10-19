@@ -8,19 +8,21 @@ use Doctrine\Common\Annotations\Annotation;
  * @Annotation(
  * @Target("METHOD")
  */
-class FileCache extends Annotation
+class FileCache
 {
     public $expires = '10m';
 
     public $enabled = true;
 
     public $category;
+    
+    public $exclusions = array('GET' => array(), 'POST' => array());
 
     public function isEnabled()
     {
         return $this->enabled;
     }
-    
+
     public function getExpires()
     {
         return $this->expires;
@@ -29,5 +31,10 @@ class FileCache extends Annotation
     public function getCategory()
     {
         return $this->category;
+    }
+
+    public function getExclusions()
+    {
+        return $this->exclusions;
     }
 }

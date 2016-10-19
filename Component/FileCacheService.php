@@ -26,7 +26,7 @@ class FileCacheService
         $this->env = $environment;
         $this->expires = '60s'; // should a default really be set
     }
-    
+
     /**
      * A special method to be able to use this service from annotations.
      * See KernelControllerListener::onKernelController() method for more information.
@@ -38,10 +38,25 @@ class FileCacheService
     public function createFromRequestAndAnnotation(Request $request, FileCache $annotation)
     {
         $uri = $request->getRequestUri();
-        $params = $this->getRequestParams($request);
+        $method = $request->getMethod();
+        $reqParams = $this->getRequestParams($request);
+        $cacheParams = array();
 
         // create a identifier from request url and get parameters
-        $identifier = $uri.implode(':', $params);
+        // but remove optional boyd/get/post parameters when specified in
+        // in annotation when creating the unique identifier
+
+        // methodType should be get|post (see FileCache annotation), post handles only
+        // body parameters, not form url encoded params
+        foreach ($reqParams as $name => $value) {
+            $excludedParamsNames = $annotation->getExclusions()[$method];
+
+            if (false === in_array($name, $excludedParamsNames)) {
+                $cacheParams[$name] = $value;
+            }
+        }
+
+        $identifier = $uri.implode(':', $cacheParams);
 
         // bootstrap the hereby cache service
         $this->identify($identifier, $annotation->getCategory())->expires($annotation->getExpires());
