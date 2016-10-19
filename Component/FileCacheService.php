@@ -204,6 +204,14 @@ class FileCacheService
     }
 
     /**
+     * @return string
+     */
+    public function getCacheFilePath()
+    {
+        return $this->filepath;
+    }
+
+    /**
      * Turns any "3d|60d|etc" expression format into a number of seconds.
      *
      * @param string Input format "3d|60dÓ...""
