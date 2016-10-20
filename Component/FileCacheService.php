@@ -167,10 +167,10 @@ class FileCacheService
      */
     public function clear()
     {
-        if (false === $this->dir) {
+        if (!is_dir($this->dir)) {
             return $this;
         }
-
+        
         $finder = new Finder();
         $finder->files()->in($this->dir)->name('*.cache');
         foreach ($finder as $file) {
